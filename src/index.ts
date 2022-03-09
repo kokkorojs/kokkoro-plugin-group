@@ -32,10 +32,10 @@ export default class implements Extension {
   }
 
   async title(this: Bot, event: GroupMessageEvent, option: GroupOption) {
-    const { uin, gl, getUserLevel } = this;
+    const { uin, gl } = this;
     const { group_id, raw_message, sender } = event;
     const { user_id } = sender;
-    const level = getUserLevel(event);
+    const level = this.getUserLevel(event);
     const { title_level } = option;
 
     let message = null;
