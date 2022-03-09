@@ -1,0 +1,29 @@
+{
+  "name": "kokkoro-group",
+  "version": "0.0.1",
+  "description": "群管理，时不时来塞口球",
+  "main": "./lib/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kokkorojs/kokkoro-group.git"
+  },
+  "keywords": [
+    "kokkoro"
+  ],
+  "author": "yuki",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kokkorojs/kokkoro-group/issues"
+  },
+  "homepage": "https://github.com/kokkorojs/kokkoro-group#readme",
+  "files": [
+    "lib"
+  ],
+  "devDependencies": {
+    "@types/node": "^17.0.21",
+    "kokkoro-core": "^0.2.0"
+  }
+}
