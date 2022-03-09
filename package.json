@@ -19,11 +19,11 @@
     "url": "https://github.com/kokkorojs/kokkoro-group/issues"
   },
   "homepage": "https://github.com/kokkorojs/kokkoro-group#readme",
-  "files": [
-    "lib"
-  ],
   "devDependencies": {
     "@types/node": "^17.0.21",
     "kokkoro-core": "^0.2.0"
-  }
+  },
+  "files": [
+    "lib"
+  ]
 }
