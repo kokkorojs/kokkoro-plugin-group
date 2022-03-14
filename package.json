@@ -1,5 +1,5 @@
 {
-  "name": "kokkoro-group",
+  "name": "kokkoro-plugin-group",
   "version": "0.0.1",
   "description": "群管理，时不时来塞口球",
   "main": "./lib/index.js",
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kokkorojs/kokkoro-group.git"
+    "url": "git+https://github.com/kokkorojs/kokkoro-plugin-group.git"
   },
   "keywords": [
     "kokkoro"
@@ -16,12 +16,12 @@
   "author": "yuki",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/kokkorojs/kokkoro-group/issues"
+    "url": "https://github.com/kokkorojs/kokkoro-plugin-group/issues"
   },
-  "homepage": "https://github.com/kokkorojs/kokkoro-group#readme",
+  "homepage": "https://github.com/kokkorojs/kokkoro-plugin-group#readme",
   "devDependencies": {
     "@types/node": "^17.0.21",
-    "kokkoro-core": "^0.2.0"
+    "kokkoro": "^0.2.0"
   },
   "files": [
     "lib"
