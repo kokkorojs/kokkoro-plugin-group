@@ -19,6 +19,8 @@ npm i kokkoro-plugin-group
 
 ``` typescript
 interface GroupOption {
+  // 群通知
+  notice: boolean;
   // 申请头衔等级限制
   title_level: number;
 }
