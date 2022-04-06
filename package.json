@@ -1,6 +1,6 @@
 {
   "name": "kokkoro-plugin-group",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "群管理，时不时来塞口球",
   "main": "./lib/index.js",
   "scripts": {

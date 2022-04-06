@@ -71,7 +71,7 @@ export default class Group implements Extension {
   async onMemberIncrease(event: MemberIncreaseEvent) {
     const option = getOption(event) as GroupOption;
 
-    if (!option.notice) return;
+    if (!option.notice || event.user_id === this.bot.uin) return;
 
     const { group_id, user_id } = event;
     const message: any = ['欢迎新人 ', section.at(user_id), ' 的加入~', '\n新人麻烦爆照报三围，希望你不要不识抬举\n', await section.image(join(image_path, 'miyane.jpg'))];
@@ -82,7 +82,7 @@ export default class Group implements Extension {
   async onMemberDecrease(event: MemberDecreaseEvent) {
     const option = getOption(event) as GroupOption;
 
-    if (!option.notice) return;
+    if (!option.notice || event.user_id === this.bot.uin) return;
 
     const { operator_id, group_id, user_id, member } = event;
     // 判断是否人为操作
