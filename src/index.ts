@@ -1,7 +1,8 @@
 import { join } from 'path';
-import { Plugin } from 'kokkoro';
-import { GroupOption } from './type';
 import { segment } from 'oicq';
+import { Plugin } from 'kokkoro';
+
+import { GroupOption } from './type';
 
 const images_path = join(__dirname, '../images');
 const option: GroupOption = {
@@ -44,22 +45,38 @@ plugin
 
 plugin
   .listen('notice.group.increase')
-  .action(function (event) {
+  .trigger(function (event) {
     const { group_id, user_id } = event;
     const option = this.getOption(group_id, 'group') as GroupOption;
 
     if (!option.notice || user_id === this.uin) {
       return;
     }
+    const is_admin = this.isAdmin(user_id);
+    const is_master = this.isMaster(user_id);
     const image = join(images_path, 'miyane.jpg');
-    const message: any[] = ['欢迎新人 ', segment.at(user_id), ' 的加入~\n', '新人麻烦爆照报三围，希望你不要不识抬举\n', segment.image(image)];
+    const message: any[] = [];
 
+    switch (true) {
+      case is_admin:
+        message.push(...[segment.at(user_id), 'yuki yuki yuki (ﾉ≧∀≦)ﾉ']);
+        break;
+      case is_master:
+        message.push('欢迎新...啊咧？是 master 么 (*ﾟﾛﾟ)');
+        break;
+      default:
+        message.push(...[
+          '欢迎新人 ', segment.at(user_id), ' 的加入~\n',
+          '新人麻烦爆照报三围，希望你不要不识抬举\n', segment.image(image)
+        ]);
+        break;
+    }
     this.sendGroupMsg(group_id, message);
   })
 
 plugin
   .listen('notice.group.decrease')
-  .action(function (event) {
+  .trigger(function (event) {
     const { operator_id, group_id, user_id, member } = event;
     const option = this.getOption(group_id, 'group') as GroupOption;
 
