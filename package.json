@@ -1,6 +1,6 @@
 {
   "name": "kokkoro-plugin-group",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "description": "群管理，时不时来塞口球",
   "main": "./lib/index.js",
   "scripts": {
@@ -20,11 +20,11 @@
   },
   "homepage": "https://github.com/kokkorojs/kokkoro-plugin-group#readme",
   "devDependencies": {
-    "@types/node": "^17.0.21",
-    "kokkoro": "^0.2.5"
+    "@types/node": "^17.0.23",
+    "kokkoro": "^0.3.0"
   },
   "files": [
     "lib",
-    "image"
+    "images"
   ]
 }

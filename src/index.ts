@@ -1,107 +1,29 @@
 import { join } from 'path';
-import { GroupMessageEvent, MemberIncreaseEvent, MemberDecreaseEvent } from 'oicq';
-import { Extension, Bot, Order, getOption, getOrder, Option, section } from 'kokkoro';
+import { Plugin } from 'kokkoro';
+import { GroupOption } from './type';
+import { segment } from 'oicq';
 
-interface GroupOption extends Option {
-  notice: boolean;
-  title_level: number;
-  color_level: number;
-}
-
-type ColorfulType = '红色' | '黄色' | '黑色' | '粉色' | '紫色' | '潮流' | '朝夕' | '粉黛' | '夜空' | '晚秋' | '盛夏' | '日出' | '黄昏' | '冬梅' | '初春' | '蓝色' | '绿色' | '马卡龙' | '科技感' | '高级灰' | '糖果缤纷' | '霓虹闪烁';
-
-const colorful = {
-  '红色': '\u003c&ÿÿ5@\u003e',
-  '黄色': '<&ÿÿÏP>',
-  '黑色': '<&ÿĀĀĀ>',
-  '粉色': '<&ÿÿ]•>',
-  '紫色': '<&ÿÒUÐ>',
-  '潮流': '<%ĀĀ␇Þ>',
-  '朝夕': '<%ĀĀ␇Ý>',
-  '粉黛': '<%ĀĀ␇Ü>',
-  '夜空': '<%ĀĀ␇Û>',
-  '晚秋': '<%ĀĀ␇Ú>',
-  '盛夏': '<%ĀĀ␇Ø>',
-  '日出': '<%ĀĀ␇×>',
-  '黄昏': '<%ĀĀ␇Ù>',
-  '冬梅': '<%ĀĀ␇Ù>',
-  '初春': '<%ĀĀ␇Ù>',
-  '蓝色': '<&ÿ␇Çý>',
-  '绿色': '<&ÿ␇ÄW>',
-  '马卡龙': '<%ĀĀ␇Õ>',
-  '科技感': '<%ĀĀ␇Ô>',
-  '高级灰': '<%ĀĀ␇Ù>',
-  '糖果缤纷': '<%ĀĀ␇Ù>',
-  '霓虹闪烁': '<%ĀĀ␇Ö>',
+const images_path = join(__dirname, '../images');
+const option: GroupOption = {
+  apply: true,
+  lock: false,
+  notice: true,
+  title_level: 2,
 };
-const image_path = join(__dirname, '../image');
+export const plugin = new Plugin('group', option).version(require('../package.json').version);
 
-export default class Group implements Extension {
-  bot: Bot;
-  option: GroupOption = {
-    notice: true,
-    title_level: 2,
-    color_level: 2,
-  }
-  orders: Order[] = [
-    {
-      func: this.applyTitle,
-      regular: /^申请头衔[\s]?.+$/,
-    },
-    {
-      func: this.applyColor,
-      regular: /^申请颜色[\s]?.+$/,
-    },
-  ];
-
-  constructor(bot: Bot) {
-    this.bot = bot;
-  }
-
-  onGroupMessage(event: GroupMessageEvent) {
-    const raw_message = event.raw_message;
-    const option = getOption(event);
-    const order = getOrder(this.orders, raw_message);
-
-    if (option.apply) {
-      order && order.call(this, event, option);
-    }
-  }
-
-  async onMemberIncrease(event: MemberIncreaseEvent) {
-    const option = getOption(event) as GroupOption;
-
-    if (!option.notice || event.user_id === this.bot.uin) return;
-
-    const { group_id, user_id } = event;
-    const message: any = ['欢迎新人 ', section.at(user_id), ' 的加入~', '\n新人麻烦爆照报三围，希望你不要不识抬举\n', await section.image(join(image_path, 'miyane.jpg'))];
-
-    this.bot.sendGroupMsg(group_id, message);
-  }
-
-  async onMemberDecrease(event: MemberDecreaseEvent) {
-    const option = getOption(event) as GroupOption;
-
-    if (!option.notice || event.user_id === this.bot.uin) return;
-
-    const { operator_id, group_id, user_id, member } = event;
-    // 判断是否人为操作
-    const message: any = operator_id === user_id
-      ? [`成员 ${member?.nickname}(${user_id}) 已退出群聊\n`, await section.image(join(image_path, 'chi.jpg'))]
-      : ['感谢 ', section.at(operator_id), ` 成员\n赠送给 ${member?.nickname}(${user_id}) 的一张飞机票~\n`, await section.image(join(image_path, 'mizu.jpg'))];
-
-    this.bot.sendGroupMsg(group_id, message);
-  }
-
-  async applyTitle(event: GroupMessageEvent, option: GroupOption) {
-    const { group_id, raw_message, sender } = event;
+plugin
+  .command('title <name>', 'group')
+  .sugar(/^申请头衔\s?(?<name>.+)$/)
+  .action(async function (name: string) {
+    const { group_id, sender } = this.event;
     const { user_id } = sender;
-    const { title_level } = option;
+    const { title_level } = this.option as GroupOption;
 
     const group = this.bot.pickGroup(group_id);
-    const level = this.bot.getUserLevel(event);
+    const level = this.bot.getUserLevel(this.event);
 
-    let message = null;
+    let message: string = '';
 
     switch (true) {
       case !group.is_owner:
@@ -111,58 +33,43 @@ export default class Group implements Extension {
         message = `你当前为 Level ${level}，申请头衔需要达到 Level ${title_level}`;
         break;
     }
-
     if (message) {
-      return event.reply(message, true);
+      return this.event.reply(message, true);
     }
+    const title = name.replace('申请头衔', '').trim();
+    const succeed = await this.bot.setGroupSpecialTitle(group_id, user_id, title);
 
-    const title = raw_message.replace('申请头衔', '').trim();
+    this.event.reply(succeed ? '申请成功' : '申请失败', true);
+  })
 
-    try {
-      await this.bot.setGroupSpecialTitle(group_id, user_id, title);
-      event.reply('申请成功', true);
-    } catch (error) {
-      event.reply('申请失败', true);
+plugin
+  .listen('notice.group.increase')
+  .action(function (event) {
+    const { group_id, user_id } = event;
+    const option = this.getOption(group_id, 'group') as GroupOption;
+
+    if (!option.notice || user_id === this.uin) {
+      return;
     }
-  }
+    const image = join(images_path, 'miyane.jpg');
+    const message: any[] = ['欢迎新人 ', segment.at(user_id), ' 的加入~\n', '新人麻烦爆照报三围，希望你不要不识抬举\n', segment.image(image)];
 
-  async applyColor(event: GroupMessageEvent, option: GroupOption) {
-    const { group_id, raw_message, sender } = event;
-    const { user_id, card, nickname } = sender;
-    const { color_level } = option;
+    this.sendGroupMsg(group_id, message);
+  })
 
-    const keys = Object.keys(colorful);
-    const level = this.bot.getUserLevel(event);
-    const group = this.bot.pickGroup(group_id);
-    const color = raw_message.replace('申请颜色', '').trim() as ColorfulType;
+plugin
+  .listen('notice.group.decrease')
+  .action(function (event) {
+    const { operator_id, group_id, user_id, member } = event;
+    const option = this.getOption(group_id, 'group') as GroupOption;
 
-    let message = null;
-
-    switch (true) {
-      case this.bot.config.platform !== 1:
-        message = `申请颜色仅支持安卓协议`;
-        break;
-      case !group.is_admin:
-        message = `申请颜色需要 bot 拥有管理权限才能正常使用`;
-        break;
-      case level < color_level:
-        message = `你当前为 Level ${level}，申请颜色需要达到 Level ${color_level}`;
-        break;
-      case !keys.includes(color):
-        message = `不存在 "${color}"，颜色的合法值为：${keys.join('、')}`;
-        break;
+    if (!option.notice || user_id === this.uin) {
+      return;
     }
+    // 判断是否人为操作
+    const message: any[] = operator_id === user_id
+      ? [`成员 ${member?.nickname}(${user_id}) 已退出群聊\n`, segment.image(join(images_path, 'chi.jpg'))]
+      : ['感谢 ', segment.at(operator_id), ` 成员\n赠送给 ${member?.nickname}(${user_id}) 的一张飞机票~\n`, segment.image(join(images_path, 'mizu.jpg'))];
 
-    if (message) {
-      return event.reply(message, true);
-    }
-
-    try {
-      const member = this.bot.pickMember(group_id, user_id);
-      await member.setCard(`${colorful[color]}${card ? card : nickname}`);
-      event.reply('申请成功', true);
-    } catch (error) {
-      event.reply('申请失败', true);
-    }
-  }
-}
+    this.sendGroupMsg(group_id, message);
+  })
