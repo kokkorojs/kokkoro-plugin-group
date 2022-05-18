@@ -2,7 +2,7 @@ import { join } from 'path';
 import { segment } from 'oicq';
 import { Plugin } from 'kokkoro';
 
-import { GroupOption } from './type';
+import { GroupOption } from './types';
 
 const images_path = join(__dirname, '../images');
 const option: GroupOption = {
@@ -35,25 +35,24 @@ plugin
         break;
     }
     if (message) {
-      return this.event.reply(message, true);
+      return this.reply(message, true);
     }
     const title = name.replace('申请头衔', '').trim();
     const succeed = await this.bot.setGroupSpecialTitle(group_id, user_id, title);
 
-    this.event.reply(succeed ? '申请成功' : '申请失败', true);
+    this.reply(succeed ? '申请成功' : '申请失败', true);
   })
 
 plugin
   .listen('notice.group.increase')
-  .trigger(function (event) {
-    const { group_id, user_id } = event;
-    const option = this.getOption(group_id, 'group') as GroupOption;
+  .trigger(function () {
+    const { group_id, user_id } = this.event;
 
-    if (!option.notice || user_id === this.uin) {
+    if (!this.option!.notice || user_id === this.bot.uin) {
       return;
     }
-    const is_admin = this.isAdmin(user_id);
-    const is_master = this.isMaster(user_id);
+    const is_admin = this.bot.isAdmin(user_id);
+    const is_master = this.bot.isMaster(user_id);
     const image = join(images_path, 'miyane.jpg');
     const message: any[] = [];
 
@@ -71,16 +70,15 @@ plugin
         ]);
         break;
     }
-    this.sendGroupMsg(group_id, message);
+    this.bot.sendGroupMsg(group_id, message);
   })
 
 plugin
   .listen('notice.group.decrease')
-  .trigger(function (event) {
-    const { operator_id, group_id, user_id, member } = event;
-    const option = this.getOption(group_id, 'group') as GroupOption;
+  .trigger(function () {
+    const { operator_id, group_id, user_id, member } = this.event;
 
-    if (!option.notice || user_id === this.uin) {
+    if (!this.option!.notice || user_id === this.bot.uin) {
       return;
     }
     // 判断是否人为操作
@@ -88,5 +86,5 @@ plugin
       ? [`成员 ${member?.nickname}(${user_id}) 已退出群聊\n`, segment.image(join(images_path, 'chi.jpg'))]
       : ['感谢 ', segment.at(operator_id), ` 成员\n赠送给 ${member?.nickname}(${user_id}) 的一张飞机票~\n`, segment.image(join(images_path, 'mizu.jpg'))];
 
-    this.sendGroupMsg(group_id, message);
+    this.bot.sendGroupMsg(group_id, message);
   })
