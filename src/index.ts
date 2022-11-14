@@ -1,28 +1,33 @@
 import { join } from 'path';
-import { segment } from 'oicq';
-import { Plugin } from 'kokkoro';
+import { Plugin, Option } from 'kokkoro';
+import { Sendable, segment } from 'amesu';
 
-import { GroupOption } from './types';
-
+interface GroupOption extends Option {
+  apply: boolean;
+  lock: boolean;
+  notice: boolean;
+  title_level: number;
+}
+const { version } = require('../package.json');
 const images_path = join(__dirname, '../images');
 const option: GroupOption = {
   apply: true,
   lock: false,
   notice: true,
-  title_level: 2,
+  title_level: 1,
 };
-export const plugin = new Plugin('group', option).version(require('../package.json').version);
+const plugin = new Plugin('group', option);
+
+plugin
+  .version(version)
 
 plugin
   .command('title <name>', 'group')
   .sugar(/^申请头衔\s?(?<name>.+)$/)
-  .action(async function (name: string) {
-    const { group_id, sender } = this.event;
+  .action(async (ctx) => {
+    const { group_id, sender, group, permission_level, query } = ctx;
     const { user_id } = sender;
-    const { title_level } = this.option as GroupOption;
-
-    const group = this.bot.pickGroup(group_id);
-    const level = this.bot.getUserLevel(this.event);
+    const { title_level } = <GroupOption>ctx.option;
 
     let message: string = '';
 
@@ -30,31 +35,35 @@ plugin
       case !group.is_owner:
         message = `申请头衔需要 bot 拥有群主权限才能正常使用`;
         break;
-      case level < title_level:
-        message = `你当前为 Level ${level}，申请头衔需要达到 Level ${title_level}`;
+      case permission_level < title_level:
+        message = `你当前为 Level ${permission_level}，申请头衔需要达到 Level ${title_level}`;
         break;
     }
     if (message) {
-      return this.reply(message, true);
+      return ctx.reply(message);
     }
-    const title = name.replace('申请头衔', '').trim();
-    const succeed = await this.bot.setGroupSpecialTitle(group_id, user_id, title);
+    const title = query.name.replace('申请头衔', '').trim();
 
-    this.reply(succeed ? '申请成功' : '申请失败', true);
+    try {
+      await ctx.botApi('setGroupSpecialTitle', group_id, user_id, title);
+      ctx.reply('申请成功');
+    } catch (error) {
+      ctx.reply('申请失败');
+    }
   })
 
 plugin
   .listen('notice.group.increase')
-  .trigger(function () {
-    const { group_id, user_id } = this.event;
+  .trigger(async (event) => {
+    const { group_id, user_id, option, self_id } = event;
 
-    if (!this.option!.notice || user_id === this.bot.uin) {
+    if (!option!.notice || user_id === self_id) {
       return;
     }
-    const is_admin = this.bot.isAdmin(user_id);
-    const is_master = this.bot.isMaster(user_id);
+    const is_admin = await event.botApi('isAdmin', user_id);
+    const is_master = await event.botApi('isMaster', user_id);
     const image = join(images_path, 'miyane.jpg');
-    const message: any[] = [];
+    const message: Sendable = [];
 
     switch (true) {
       case is_admin:
@@ -70,21 +79,21 @@ plugin
         ]);
         break;
     }
-    this.bot.sendGroupMsg(group_id, message);
+    event.botApi('sendGroupMsg', group_id, message);
   })
 
 plugin
   .listen('notice.group.decrease')
-  .trigger(function () {
-    const { operator_id, group_id, user_id, member } = this.event;
+  .trigger((event) => {
+    const { operator_id, group_id, user_id, member, option, self_id } = event;
 
-    if (!this.option!.notice || user_id === this.bot.uin) {
+    if (!option!.notice || user_id === self_id) {
       return;
     }
     // 判断是否人为操作
-    const message: any[] = operator_id === user_id
+    const message: Sendable = operator_id === user_id
       ? [`成员 ${member?.nickname}(${user_id}) 已退出群聊\n`, segment.image(join(images_path, 'chi.jpg'))]
       : ['感谢 ', segment.at(operator_id), ` 成员\n赠送给 ${member?.nickname}(${user_id}) 的一张飞机票~\n`, segment.image(join(images_path, 'mizu.jpg'))];
 
-    this.bot.sendGroupMsg(group_id, message);
+    event.botApi('sendGroupMsg', group_id, message);
   })

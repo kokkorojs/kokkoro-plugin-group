@@ -4,7 +4,7 @@
 
 ## 安装
 
-``` shell
+```shell
 # 切换至 bot 目录
 cd bot
 
@@ -12,16 +12,13 @@ cd bot
 npm i kokkoro-plugin-group
 ```
 
-在 [kokkoro](https://github.com/kokkorojs/kokkoro) 成功运行并登录后，发送 `enable group` 即可为 bot 启用插件  
-使用 `group update <key> <value>` 可修改当前群聊的插件参数，例如修改申请头衔等级限制 `group update title_level 1`
-
 ## 参数
 
 ``` typescript
 interface GroupOption {
   // 群通知(新人入群、退群推送)
   notice: boolean;
-  // 申请头衔等级限制，默认 2
+  // 申请头衔等级限制，默认 1
   title_level: number;
 }
 ```
