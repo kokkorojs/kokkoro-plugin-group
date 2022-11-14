@@ -3,9 +3,9 @@ import { Plugin, Option } from 'kokkoro';
 import { Sendable, segment } from 'amesu';
 
 interface GroupOption extends Option {
-  apply: boolean;
-  lock: boolean;
+  /** 群通知(新人入群、退群推送) */
   notice: boolean;
+  /** 申请头衔等级限制，默认 1 */
   title_level: number;
 }
 const { version } = require('../package.json');

@@ -15,10 +15,10 @@ npm i kokkoro-plugin-group
 ## 参数
 
 ``` typescript
-interface GroupOption {
-  // 群通知(新人入群、退群推送)
+interface GroupOption extends Option {
+  /** 群通知(新人入群、退群推送) */
   notice: boolean;
-  // 申请头衔等级限制，默认 1
+  /** 申请头衔等级限制，默认 1 */
   title_level: number;
 }
 ```
