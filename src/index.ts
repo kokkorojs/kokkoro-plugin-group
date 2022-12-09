@@ -1,6 +1,6 @@
 import { join } from 'path';
 import { Plugin, Option } from 'kokkoro';
-import { Sendable, segment } from 'amesu';
+import { Sendable, segment } from 'oicq';
 
 interface GroupOption extends Option {
   /** 群通知(新人入群、退群推送) */
@@ -8,6 +8,7 @@ interface GroupOption extends Option {
   /** 申请头衔等级限制，默认 1 */
   title_level: number;
 }
+
 const { version } = require('../package.json');
 const images_path = join(__dirname, '../images');
 const option: GroupOption = {
@@ -25,7 +26,7 @@ plugin
   .command('title <name>', 'group')
   .sugar(/^申请头衔\s?(?<name>.+)$/)
   .action(async (ctx) => {
-    const { group_id, sender, group, permission_level, query } = ctx;
+    const { group_id, sender, group, permission_level, query, bot } = ctx;
     const { user_id } = sender;
     const { title_level } = <GroupOption>ctx.option;
 
@@ -40,28 +41,28 @@ plugin
         break;
     }
     if (message) {
-      return ctx.reply(message);
+      return ctx.reply(message, true);
     }
     const title = query.name.replace('申请头衔', '').trim();
 
     try {
-      await ctx.botApi('setGroupSpecialTitle', group_id, user_id, title);
-      ctx.reply('申请成功');
+      await bot.setGroupSpecialTitle(group_id, user_id, title);
+      ctx.reply('申请成功', true);
     } catch (error) {
-      ctx.reply('申请失败');
+      ctx.reply('申请失败', true);
     }
   })
 
 plugin
   .listen('notice.group.increase')
   .trigger(async (event) => {
-    const { group_id, user_id, option, self_id } = event;
+    const { group_id, user_id, option, self_id, bot } = event;
 
     if (!option!.notice || user_id === self_id) {
       return;
     }
-    const is_admin = await event.botApi('isAdmin', user_id);
-    const is_master = await event.botApi('isMaster', user_id);
+    const is_admin = bot.isAdmin(user_id);
+    const is_master = bot.isMaster(user_id);
     const image = join(images_path, 'miyane.jpg');
     const message: Sendable = [];
 
@@ -79,13 +80,13 @@ plugin
         ]);
         break;
     }
-    event.botApi('sendGroupMsg', group_id, message);
+    bot.sendGroupMsg(group_id, message);
   })
 
 plugin
   .listen('notice.group.decrease')
   .trigger((event) => {
-    const { operator_id, group_id, user_id, member, option, self_id } = event;
+    const { operator_id, group_id, user_id, member, option, self_id, bot } = event;
 
     if (!option!.notice || user_id === self_id) {
       return;
@@ -95,5 +96,5 @@ plugin
       ? [`成员 ${member?.nickname}(${user_id}) 已退出群聊\n`, segment.image(join(images_path, 'chi.jpg'))]
       : ['感谢 ', segment.at(operator_id), ` 成员\n赠送给 ${member?.nickname}(${user_id}) 的一张飞机票~\n`, segment.image(join(images_path, 'mizu.jpg'))];
 
-    event.botApi('sendGroupMsg', group_id, message);
+    bot.sendGroupMsg(group_id, message);
   })

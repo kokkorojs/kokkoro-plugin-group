@@ -14,7 +14,7 @@ npm i kokkoro-plugin-group
 
 ## 参数
 
-``` typescript
+```typescript
 interface GroupOption extends Option {
   /** 群通知(新人入群、退群推送) */
   notice: boolean;
